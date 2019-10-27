@@ -26,10 +26,10 @@ public class MyStreamSocket extends Socket{
 	}
 	private void setStreams() throws IOException{
 		//input
-		InputStream inStream = socket.getInputStream();
+		InputStream inStream = this.socket.getInputStream();
 		this.input = new BufferedReader(new InputStreamReader(inStream));
 		//output
-		OutputStream  outStream = socket.getOutputStream();
+		OutputStream  outStream = this.socket.getOutputStream();
 		this.output = new PrintWriter(new OutputStreamWriter(outStream));
 	}
 	public void sendMessage(String message) throws IOException{
@@ -37,7 +37,9 @@ public class MyStreamSocket extends Socket{
 		this.output.flush();
 	}
 	public String receiveMessage() throws IOException{
-		String message = input.readLine();
+		//while(this.input.readLine().length() == 0);
+		String message;
+		while((message = this.input.readLine()).length() == 0);
 		return message;
 	}
 }

@@ -3,7 +3,7 @@ import java.net.*;
 import java.io.*;
 
 public class GameClient{
-	boolean checkWord(String word){
+	boolean compareLetter(String word){
 		int flag = 1;
 		if(word.charAt(0) == letter.charAt(0))
 			flag = 0;

@@ -5,10 +5,6 @@ import java.util.Random;
 
 public class GameServer{
 	public static void main(String args[]){
-		OutputStream outStream1, outStream2;
-		PrintWriter socketOutput1, socketOutput2;
-		InputStream inStream1, inStream2;
-		BufferedReader socketInput1, socketInput2;
 		try{
   		    int portNo = 2000;
 			ServerSocket connectionSocket = new ServerSocket(portNo);
@@ -29,23 +25,45 @@ public class GameServer{
 			int rand_id = rand.nextInt(2) + 1;
 			char rand_ch = (char)(rand.nextInt(26) + 97);
 			String msg = rand_id + "," + rand_ch;
-			//System.out.println(msg);
+			System.out.println(msg);
 			dataSocket1.sendMessage(msg);
 			dataSocket2.sendMessage(msg);
-			while(true){
-				break;
+			if(rand_id == 2){
+				MyStreamSocket temp = dataSocket1;
+				dataSocket1 = dataSocket2;
+				dataSocket2 = temp;
+				System.out.println("swap");
 			}
-			dataSocket1.close();
-			dataSocket2.close();
-			connectionSocket.close();
+			while(true){
+				msg = dataSocket1.receiveMessage();
+				System.out.println("word"+msg);
+				if(valid(msg)){
+					dataSocket2.sendMessage(msg);
+					dataSocket1.sendMessage("T");
+					//swap turn
+					MyStreamSocket temp = dataSocket1;
+					dataSocket1 = dataSocket2;
+					dataSocket2 = temp;
+				}
+				else{
+					dataSocket1.sendMessage("F");
+				}
+			}
+			//dataSocket1.close();
+			//dataSocket2.close();
+			//connectionSocket.close();
 		}
 		catch(Exception e){
 			System.out.println(e);
 		}
 
 	}
+	//helping methods
+	private static boolean valid(String msg){
+		return true;
+	}
 }
-/* To make our Game server concurrent
-class GameServerThread implements Runnable{
+/* To make our Game server concurrent */
+/*class GameServerThread implements Runnable{
 
 }*/
