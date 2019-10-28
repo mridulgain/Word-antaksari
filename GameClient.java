@@ -1,4 +1,3 @@
-//Client
 import java.net.*;
 import java.io.*;
 
@@ -23,13 +22,6 @@ public class Client{
 		System.out.print("Re-Enter your word: ");
 	}
 
-	// static boolean checkWordValidity(String word, char letter, String signal){
-	// 	boolean flag = true;
-	// 	if(signal.equals("T")){
-	// 		reenterWord();
-	// 	}
-	// }
-
 	static boolean compareLetter(String word, char letter){
 		boolean flag = false;
 		if(word.charAt(0) == letter)
@@ -53,6 +45,7 @@ public class Client{
 				int port = 2000;
 				int id, toss, flag;
 				String name, oppName, word, signal, message;
+				boolean val = true;
 
 				Socket mySocket = new Socket(acceptorHost, port);
 				System.out.println("Connection to Server...");
@@ -106,7 +99,26 @@ public class Client{
 							return;
 						}
 						word = input.readLine().toLowerCase();
-					}while(!compareLetter(word, letter));
+						val = compareLetter(word, letter);
+						// System.out.println("valid: " + val);
+
+						// val = true;
+						if(val){
+							// System.out.println("valid");
+							socketOutput.println(word);
+							socketOutput.flush();
+
+							while((signal = socketInput.readLine()).length() == 0);
+							if(signal.equals("T"))
+								val = true;
+							else{
+								liveCount++;
+								val = false;
+							}
+						}
+					}while(!val);
+				// 	socketOutput.println(word);
+				// 	socketOutput.flush();
 				}
 				else{
 					System.out.println("You lost the toss");
@@ -123,11 +135,12 @@ public class Client{
 
 					System.out.println(oppName + " : " + message);
 					letter = message.charAt(message.length()-1);
+					System.out.println("You letter is " + letter);
 
 					// write message to output Stream
 					System.out.print("You: ");
 					// word = input.readLine();
-					boolean val = true;
+					
 					do{
 						if(checkCount()){
 							mySocket.close();
@@ -135,18 +148,22 @@ public class Client{
 						}
 
 						if(!val){
-							reenterWord();
+							System.out.println("Re-enter: ");
 						}
 
 						word = input.readLine().toLowerCase();
 						if(word.equals("z")){
 							System.out.println("You quit the game in the middle of war,\nYou Loose");
+							socketOutput.println(word);
+							socketOutput.flush();
 							mySocket.close();
 							return;
 						}
 						val = compareLetter(word, letter);
+						// System.out.println("valid: " + val);
 
 						if(val){
+							// System.out.println("valid");
 							socketOutput.println(word);
 							socketOutput.flush();
 
