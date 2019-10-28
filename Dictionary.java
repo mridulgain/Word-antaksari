@@ -5,14 +5,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 public class Dictionary{
-	private Hashtable<String, Integer> dict;
+	private Hashtable<String, Boolean> dict;
+
 	public Dictionary() throws FileNotFoundException{
-		dict = new Hashtable<String, Integer>();
+		dict = new Hashtable<String, Boolean>();
     	Scanner sc = new Scanner(new File("words_alpha.txt"));
     	while(sc.hasNextLine())
-    		dict.put(sc.nextLine(), 0);
+    		dict.put(sc.nextLine(), false);
+	}
+	public boolean contains(String key){
+		return dict.containsKey(key);
+	}
+	public void addToHistory(String key){
+		dict.put(key, true);
+	}
+	public boolean accessedBefore(String key){
+		return dict.get(key);
 	}
 	public String toString(){
-		return String.valueOf(dict.get("apple"));
+		return dict.toString();
 	}
 }

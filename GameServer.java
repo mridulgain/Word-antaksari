@@ -18,8 +18,10 @@ public class GameServer{
 			MyStreamSocket dataSocket2 = new MyStreamSocket(connectionSocket.accept());
 			String player2 = dataSocket2.receiveMessage();
 			dataSocket2.sendMessage(player1);//Acknowledging player 2
-			dataSocket1.sendMessage(player2);
+			dataSocket1.sendMessage(player2);//player 1 is informed about player 2
 			System.out.println("Player 2 " + player2 +" has joined....Starting the game");
+			//Dictionary
+			Dictionary dict = new Dictionary();
 			//toss
 			Random rand = new Random();
 			int rand_id = rand.nextInt(2) + 1;
@@ -37,7 +39,7 @@ public class GameServer{
 			while(true){
 				msg = dataSocket1.receiveMessage();
 				System.out.println("word"+msg);
-				if(valid(msg)){
+				if(valid(dict, msg)){
 					dataSocket2.sendMessage(msg);
 					dataSocket1.sendMessage("T");
 					//swap turn
@@ -59,7 +61,10 @@ public class GameServer{
 
 	}
 	//helping methods
-	private static boolean valid(String msg){
+	private static boolean valid(Dictionary dict,String msg){
+		//1. present in dict
+		//2. not accessed before
+		//3. 
 		return true;
 	}
 }
