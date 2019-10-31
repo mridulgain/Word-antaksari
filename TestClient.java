@@ -35,7 +35,7 @@ public class TestClient{
 					socket.sendMessage(input.readLine());//give a word
 					String result = socket.receiveMessage();
 					System.out.println(result);
-					if(result.equals("T"))
+					if(result.split(",")[0].equals("T"))
 						state = "passive";
 				}
 				else{

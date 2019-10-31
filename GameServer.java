@@ -52,8 +52,24 @@ public class GameServer{
 					dataSocket1.sendMessage("F");
 				else{
 					dict.addToHistory(msg);
-					dataSocket2.sendMessage(msg);
-					dataSocket1.sendMessage("T" + String.valueOf(dataSocket1.getScore()));
+					dataSocket1.turnCount++;
+					dataSocket1.score += msg.length();
+					/*if(dataSocket1.turnCount == 5 && dataSocket2.turnCount == 5){
+						MyStreamSocket win = null, lose = null;
+						if(dataSocket1.score > dataSocket2.score){
+							 win = dataSocket1;
+							 lose = dataSocket2;
+						}
+						else if(dataSocket1.score < dataSocket2.score){
+							win = dataSocket2;
+							lose = dataSocket1;
+						}
+						win.sendMessage("W," + String.valueOf(win.score)+","+String.valueOf(lose.score));
+						lose.sendMessage("L," + String.valueOf(lose.score)+","+String.valueOf(win.score));
+						System.exit(0);
+					}*/
+					dataSocket2.sendMessage(msg + "," + String.valueOf(dataSocket2.score) + "," + String.valueOf(dataSocket1.score));
+					dataSocket1.sendMessage("T," + String.valueOf(dataSocket1.score) + "," + String.valueOf(dataSocket2.score));
 					//swap turn
 					MyStreamSocket temp = dataSocket1;
 					dataSocket1 = dataSocket2;

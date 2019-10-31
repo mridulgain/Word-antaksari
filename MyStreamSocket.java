@@ -14,7 +14,7 @@ public class MyStreamSocket extends Socket{
 	private Socket socket;
 	private PrintWriter output;
 	private BufferedReader input;
-	private int score;
+	public int score, turnCount;
 	//for client
 	MyStreamSocket(String acceptorHost, int acceptorPort) throws SocketException, IOException{
 		this.socket = new Socket(acceptorHost, acceptorPort);
@@ -42,11 +42,5 @@ public class MyStreamSocket extends Socket{
 		String message;
 		while((message = this.input.readLine()).length() == 0);
 		return message;
-	}
-	public void setScore(int n){
-		score = n;
-	}
-	public int getScore(){
-		return score;
 	}
 }
