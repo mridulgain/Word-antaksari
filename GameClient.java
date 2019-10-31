@@ -1,38 +1,53 @@
 import java.net.*;
 import java.io.*;
 
-public class GameClient{
+public class Client{
 
-	private static int liveCount;
+	private static int mistakeCount;
+	private static String oppName;
 
 	static void setCount(){
-		liveCount = 0;
+		mistakeCount = 3;
 	}
 
 	static boolean checkCount(){
-		if(liveCount == 3){
-			System.out.println("Sorry, We can't bear your more Mistakes\nYou Loose");
+		if(mistakeCount == 0){
+			System.out.println("Sorry, We can't bear your more Mistakes\nYou Lose");
 			return true;
 		}
 		else
 			return false;
 	}
-
-	static void reenterWord(){
-		System.out.print("Re-Enter your word: ");
-	}
-
+ 
 	static boolean compareLetter(String word, char letter){
 		boolean flag = false;
 		if(word.charAt(0) == letter)
 			flag = true;
 
 		if(!flag){
-			liveCount++;
+			mistakeCount--;
 			System.out.println("Your word begin with wrong letter \'" + word.charAt(0) + "\', Word must start with \'" + letter + "\'");
-			reenterWord();
 		}
 		return flag;
+	}
+
+	static boolean checkValidity(String[] signal){
+		if(signal[0].equals("T")){
+			System.out.println("Your Score: " + signal[1] + " " + oppName + ": " + signal[2] + " Lives remaining: " + mistakeCount);
+			return true;
+		}
+		else if(signal[0].equals("F")){
+			System.out.println("Invalid Word");
+			mistakeCount--;
+			System.out.println("Lives remaining: " + mistakeCount);
+		}
+		else if(signal[0].equals("R")){
+			System.out.println("Word is repeated, Please enter new word");
+		}
+		else if(signal[0].equals("C")){
+			System.out.println("the word you entered is very common, please try again");
+		}
+		return false;
 	}
 
 	public static void main(String args[]){
@@ -41,41 +56,31 @@ public class GameClient{
 		}
 		else{
 			try{
-				InetAddress acceptorHost = InetAddress.getByName(args[0]);
 				int port = 2000;
 				int id, toss, flag;
-				String name, oppName, word, signal, message;
+				String name, word, signal, message, msg;
 				boolean val = true;
+				String[] str;
 
-				Socket mySocket = new Socket(acceptorHost, port);
-				System.out.println("Connection to Server...");
-				// Thread.currentThread().sleep(1000);
+				MyStreamSocket mySocket = new MyStreamSocket(args[0], port);
+				System.out.println("Connected to Server...");
 
 				// user input
 				BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
 
-				// read from socket
-				InputStream inStream = mySocket.getInputStream();
-				BufferedReader socketInput = new BufferedReader(new InputStreamReader(inStream));
-
-				// write into the socket
-				OutputStream outStream = mySocket.getOutputStream();
-				PrintWriter socketOutput = new PrintWriter(new OutputStreamWriter(outStream));
-
 				// ask user for name
 				System.out.print("Enter your Name: ");
 				name = input.readLine();
-				socketOutput.println(name); 
-				socketOutput.flush();
+				mySocket.sendMessage(name);
 
 				setCount();
 
-				// For Connection Established
-				String c = socketInput.readLine();
+				// Connection Established signal
+				String c = mySocket.receiveMessage();
 				if(c.equals("1")){
 					id = 1;
 					System.out.println("Waiting for Player 2...");
-					while((oppName = socketInput.readLine()).length() == 0);
+					while((oppName = mySocket.receiveMessage()).length() == 0);
 					System.out.println("Your word war is against " + oppName);
 				}
 				else{
@@ -85,7 +90,7 @@ public class GameClient{
 				}
 
 				// Toss and Starting Letter
-				String[] tossAndLetter = socketInput.readLine().split(",");
+				String[] tossAndLetter = mySocket.receiveMessage().split(",");
 				toss = Integer.parseInt(tossAndLetter[0]);
 				char letter = tossAndLetter[1].charAt(0);
 				
@@ -100,25 +105,15 @@ public class GameClient{
 						}
 						word = input.readLine().toLowerCase();
 						val = compareLetter(word, letter);
-						// System.out.println("valid: " + val);
 
-						// val = true;
 						if(val){
-							// System.out.println("valid");
-							socketOutput.println(word);
-							socketOutput.flush();
+							mySocket.sendMessage(word);
 
-							while((signal = socketInput.readLine()).length() == 0);
-							if(signal.equals("T"))
-								val = true;
-							else{
-								liveCount++;
-								val = false;
-							}
+							while((signal = mySocket.receiveMessage()).length() == 0);
+							str = signal.split(",");
+							val = checkValidity(str);
 						}
 					}while(!val);
-				// 	socketOutput.println(word);
-				// 	socketOutput.flush();
 				}
 				else{
 					System.out.println("You lost the toss");
@@ -127,19 +122,21 @@ public class GameClient{
 
 				// Communication Between Opponents
 				do{
-					while((message = socketInput.readLine()).length() == 0);
+					while((msg = mySocket.receiveMessage()).length() == 0);
+					str = msg.split(",");
+					message = str[0];
 					if(message.equals("z")){
 						System.out.println(oppName + " quit the game.\nYou WON, Huurrrrraaaaaaayyyyyyyyyyy");
 						break;
 					}
 
+					System.out.println("Your Score: " + str[1] + " " + oppName + ": " + str[2] + " Lives remaining: " + mistakeCount);
 					System.out.println(oppName + " : " + message);
 					letter = message.charAt(message.length()-1);
-					System.out.println("You letter is " + letter);
+					System.out.println("Your letter is " + letter);
 
 					// write message to output Stream
 					System.out.print("You: ");
-					// word = input.readLine();
 					
 					do{
 						if(checkCount()){
@@ -148,32 +145,34 @@ public class GameClient{
 						}
 
 						if(!val){
-							System.out.println("Re-enter: ");
+							System.out.print("Re-Enter your word: ");
 						}
 
 						word = input.readLine().toLowerCase();
 						if(word.equals("z")){
 							System.out.println("You quit the game in the middle of war,\nYou Loose");
-							socketOutput.println(word);
-							socketOutput.flush();
+							mySocket.sendMessage(word);
 							mySocket.close();
 							return;
 						}
 						val = compareLetter(word, letter);
-						// System.out.println("valid: " + val);
 
 						if(val){
-							// System.out.println("valid");
-							socketOutput.println(word);
-							socketOutput.flush();
+							mySocket.sendMessage(word);
 
-							while((signal = socketInput.readLine()).length() == 0);
-							if(signal.equals("T"))
-								val = true;
-							else{
-								liveCount++;
-								val = false;
+							while((signal = mySocket.receiveMessage()).length() == 0);
+							str = signal.split(",");
+							if(str[0].equals("W")){
+								System.out.println("You Win the War\nYour Score : " + str[1] + " " + oppName + " score: " + str[2]);
+								mySocket.close();
+								return;
 							}
+							else if(str[0].equals("L")){
+								System.out.println("You Lost the War\nYour Score : " + str[1] + " " + oppName + " score: " + str[2]);
+								mySocket.close();
+								return;
+							}
+							val = checkValidity(str);
 						}
 					}while(!val);
 
@@ -181,10 +180,9 @@ public class GameClient{
 				
 				// Connection Close
 				mySocket.close();
-				// System.out.println("Connection Terminated");
 			}
 			catch(SocketException e){
-				System.out.println("Wrong IP format");
+				System.out.println(e);
 			}
 
 			catch(Exception e){
