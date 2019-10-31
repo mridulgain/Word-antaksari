@@ -2,7 +2,7 @@ import java.net.*;
 import java.io.*;
 public class TestClient{
 	public static void main(String args[]){
-		String msg,name,id;
+		String msg, op_name, id, state;
 		try{
 			MyStreamSocket socket  = new MyStreamSocket("localhost", 2000);
 			BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
@@ -11,10 +11,10 @@ public class TestClient{
 			msg = socket.receiveMessage();//id
 			if(msg.equals("1")){
 				id ="1";
-				name = socket.receiveMessage();
+				op_name = socket.receiveMessage();
 			}
 			else{
-				name = msg;
+				op_name = msg;
 				id = "2";
 			}
 			System.out.println(id);
@@ -24,23 +24,24 @@ public class TestClient{
 
 			if(id.equals(toss_result)){
 				System.out.println("I winn");
-				id = "active";
+				state = "active";
 			}
 			else{
 				System.out.println("I loose");
-				id = "passive";
+				state = "passive";
 			}
 			while(true){
-				if(id.equals("active")){
+				if(state.equals("active")){
 					socket.sendMessage(input.readLine());//give a word
 					String result = socket.receiveMessage();
 					System.out.println(result);
-					id = "passive";
+					if(result.equals("T"))
+						state = "passive";
 				}
 				else{
 					String oponentsMove = socket.receiveMessage();
 					System.out.println(oponentsMove);
-					id = "active";
+					state = "active";
 				}
 			}
 			//socket.close();

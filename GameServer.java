@@ -20,6 +20,7 @@ public class GameServer{
 			dataSocket2.sendMessage(player1);//Acknowledging player 2
 			dataSocket1.sendMessage(player2);//player 1 is informed about player 2
 			System.out.println("Player 2 " + player2 +" has joined....Starting the game");
+
 			//Dictionary
 			Dictionary dict = new Dictionary();
 			//toss
@@ -34,22 +35,47 @@ public class GameServer{
 				MyStreamSocket temp = dataSocket1;
 				dataSocket1 = dataSocket2;
 				dataSocket2 = temp;
-				System.out.println("swap");
+				//System.out.println("swap");
 			}
+			int counter = 0;
 			while(true){
 				msg = dataSocket1.receiveMessage();
-				System.out.println("word"+msg);
-				if(valid(dict, msg)){
+				String error_code;
+
+				if(msg.length() < 3)
+					dataSocket1.sendMessage("S");
+				else if(dict.isCommon(msg))
+					dataSocket1.sendMessage("C");
+				else if(dict.accessedBefore(msg))
+					dataSocket1.sendMessage("R");
+				else if(!dict.contains(msg))
+					dataSocket1.sendMessage("F");
+				else{
+					dict.addToHistory(msg);
 					dataSocket2.sendMessage(msg);
-					dataSocket1.sendMessage("T");
+					dataSocket1.sendMessage("T" + String.valueOf(dataSocket1.getScore()));
+					//swap turn
+					MyStreamSocket temp = dataSocket1;
+					dataSocket1 = dataSocket2;
+					dataSocket2 = temp;
+				}
+
+				/*if(accepted(dict, msg)){
+					dataSocket2.sendMessage(msg);
+					dataSocket1.sendMessage("T,0,0");
 					//swap turn
 					MyStreamSocket temp = dataSocket1;
 					dataSocket1 = dataSocket2;
 					dataSocket2 = temp;
 				}
 				else{
-					dataSocket1.sendMessage("F");
-				}
+					if(dict.isCommon(msg))
+						dataSocket1.sendMessage("C");
+					else if(dict.accessedBefore(msg))
+						dataSocket1.sendMessage("R");
+					else
+						dataSocket1.sendMessage("F");
+				}*/
 			}
 			//dataSocket1.close();
 			//dataSocket2.close();
@@ -61,11 +87,15 @@ public class GameServer{
 
 	}
 	//helping methods
-	private static boolean valid(Dictionary dict,String msg){
-		//1. present in dict
-		//2. not accessed before
-		//3. 
-		return true;
+	private static boolean accepted(Dictionary dict,String word){
+		//if(word.length() < 3)
+		//	return false;
+		//1. present in dict 		//2. not accessed before
+		if(dict.contains(word) && !dict.accessedBefore(word) && !dict.isCommon(word)){
+			dict.addToHistory(word);
+			return true;
+		}		
+		return false;
 	}
 }
 /* To make our Game server concurrent */
