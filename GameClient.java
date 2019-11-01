@@ -47,6 +47,10 @@ public class GameClient{
 		else if(signal[0].equals("C")){
 			System.out.println("the word you entered is very common, please try again");
 		}
+		else if(signal[0].equals("S")){
+			System.out.println("Word length should be atleast 3, please try again");
+			System.out.print("Re-Enter your word: ");
+		}
 		return false;
 	}
 
@@ -92,7 +96,7 @@ public class GameClient{
 
 				setCount();
 
-				// Connection Established signal
+				// Assing player id and Opponent Name
 				String[] c = mySocket.receiveMessage().split(",");
 				id = Integer.parseInt(c[0]);
 				oppName = c[1];
