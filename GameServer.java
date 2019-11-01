@@ -40,11 +40,9 @@ public class GameServer{
 			int counter = 0;
 			while(true){
 				msg = dataSocket1.receiveMessage();
-				//String error_code;
-				System.out.println("Word :" + msg);
-				if(msg.equals("q"))
-					dataSocket2.sendMessage("q");
-				else if(msg.length() < 3)
+				String error_code;
+
+				if(msg.length() < 3)
 					dataSocket1.sendMessage("S");
 				else if(dict.isCommon(msg))
 					dataSocket1.sendMessage("C");
@@ -56,7 +54,7 @@ public class GameServer{
 					dict.addToHistory(msg);
 					dataSocket1.turnCount++;
 					dataSocket1.score += msg.length();
-					if(dataSocket1.turnCount == 2 && dataSocket2.turnCount == 2){
+					/*if(dataSocket1.turnCount == 5 && dataSocket2.turnCount == 5){
 						MyStreamSocket win = null, lose = null;
 						if(dataSocket1.score > dataSocket2.score){
 							 win = dataSocket1;
@@ -69,7 +67,7 @@ public class GameServer{
 						win.sendMessage("W," + String.valueOf(win.score)+","+String.valueOf(lose.score));
 						lose.sendMessage("L," + String.valueOf(lose.score)+","+String.valueOf(win.score));
 						System.exit(0);
-					}
+					}*/
 					dataSocket2.sendMessage(msg + "," + String.valueOf(dataSocket2.score) + "," + String.valueOf(dataSocket1.score));
 					dataSocket1.sendMessage("T," + String.valueOf(dataSocket1.score) + "," + String.valueOf(dataSocket2.score));
 					//swap turn
@@ -77,18 +75,43 @@ public class GameServer{
 					dataSocket1 = dataSocket2;
 					dataSocket2 = temp;
 				}
+
+				/*if(accepted(dict, msg)){
+					dataSocket2.sendMessage(msg);
+					dataSocket1.sendMessage("T,0,0");
+					//swap turn
+					MyStreamSocket temp = dataSocket1;
+					dataSocket1 = dataSocket2;
+					dataSocket2 = temp;
+				}
+				else{
+					if(dict.isCommon(msg))
+						dataSocket1.sendMessage("C");
+					else if(dict.accessedBefore(msg))
+						dataSocket1.sendMessage("R");
+					else
+						dataSocket1.sendMessage("F");
+				}*/
 			}
 			//dataSocket1.close();
 			//dataSocket2.close();
 			//connectionSocket.close();
 		}
-		catch(SocketException s){
-			System.out.println("Connection closed");
-		}
 		catch(Exception e){
 			System.out.println(e);
 		}
 
+	}
+	//helping methods
+	private static boolean accepted(Dictionary dict,String word){
+		//if(word.length() < 3)
+		//	return false;
+		//1. present in dict 		//2. not accessed before
+		if(dict.contains(word) && !dict.accessedBefore(word) && !dict.isCommon(word)){
+			dict.addToHistory(word);
+			return true;
+		}		
+		return false;
 	}
 }
 /* To make our Game server concurrent */
