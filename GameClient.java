@@ -93,18 +93,10 @@ public class GameClient{
 				setCount();
 
 				// Connection Established signal
-				String c = mySocket.receiveMessage();
-				if(c.equals("1")){
-					id = 1;
-					System.out.println("Waiting for Player 2...");
-					while((oppName = mySocket.receiveMessage()).length() == 0);
-					System.out.println("Your word war is against " + oppName);
-				}
-				else{
-					id = 2;
-					oppName = c;
-					System.out.println("Your word war is against " + oppName);
-				}
+				String[] c = mySocket.receiveMessage().split(",");
+				id = Integer.parseInt(c[0]);
+				oppName = c[1];
+				System.out.println("Your word war is against " + oppName);
 
 				// Toss and Starting Letter
 				String[] tossAndLetter = mySocket.receiveMessage().split(",");
@@ -126,7 +118,7 @@ public class GameClient{
 						if(val){
 							mySocket.sendMessage(word);
 
-							while((signal = mySocket.receiveMessage()).length() == 0);
+							signal = mySocket.receiveMessage();
 							str = signal.split(",");
 							val = checkValidity(str);
 						}
@@ -139,7 +131,7 @@ public class GameClient{
 
 				// Communication Between Opponents
 				do{
-					while((msg = mySocket.receiveMessage()).length() == 0);
+					msg = mySocket.receiveMessage();
 					str = msg.split(",");
 					if(str[0].equals("W")){
 						System.out.println("You Win the War\nYour Score : " + str[1] + " " + oppName + " score: " + str[2]);
@@ -151,6 +143,12 @@ public class GameClient{
 						mySocket.close();
 						return;
 					}
+					else if(str[0].equals("D")){
+						System.out.println("Game Draw, both have same score\nYour Score : " + str[1] + " " + oppName + " score: " + str[2]);
+						mySocket.close();
+						return;
+					}
+
 					message = str[0];
 					if(message.equals("q")){
 						System.out.println(oppName + " quit the game.\nYou WON, Huurrrrraaaaaaayyyyyyyyyyy");
@@ -187,7 +185,7 @@ public class GameClient{
 						if(val){
 							mySocket.sendMessage(word);
 
-							while((signal = mySocket.receiveMessage()).length() == 0);
+							signal = mySocket.receiveMessage();
 							str = signal.split(",");
 							if(str[0].equals("W")){
 								System.out.println("You Win the War\nYour Score : " + str[1] + " " + oppName + " score: " + str[2]);
@@ -196,6 +194,11 @@ public class GameClient{
 							}
 							else if(str[0].equals("L")){
 								System.out.println("You Lost the War\nYour Score : " + str[1] + " " + oppName + " score: " + str[2]);
+								mySocket.close();
+								return;
+							}
+							else if(str[0].equals("D")){
+								System.out.println("Game Draw, both have same score\nYour Score : " + str[1] + " " + oppName + " score: " + str[2]);
 								mySocket.close();
 								return;
 							}
