@@ -38,9 +38,9 @@ public class MyStreamSocket extends Socket{
 		this.output.flush();
 	}
 	public String receiveMessage() throws IOException{
-		//while(this.input.readLine().length() == 0);
-		String message;
+		return this.input.readLine();
+		/*String message;
 		while((message = this.input.readLine()).length() == 0);
-		return message;
+		return message;*/
 	}
 }

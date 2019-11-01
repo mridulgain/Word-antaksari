@@ -29,6 +29,6 @@ public class Dictionary{
 		dict.put(key, true);
 	}
 	public boolean accessedBefore(String key){
-		return dict.get(key);
+		return dict.containsKey(key) && dict.get(key);
 	}
 }

@@ -8,5 +8,8 @@ public class TestDictionary{
 		System.out.println(myDict.accessedBefore("beer"));//true
 		System.out.println(myDict.isCommon("am"));//true
 		System.out.println(myDict.isCommon("bad"));//false
+
+		System.out.println(myDict.isCommon("asdf"));
+		System.out.println(myDict.accessedBefore("asdf"));
 	}
 }
