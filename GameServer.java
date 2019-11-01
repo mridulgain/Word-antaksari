@@ -8,19 +8,44 @@ public class GameServer{
 		try{
   		    int portNo = 2000;
 			ServerSocket connectionSocket = new ServerSocket(portNo);
-			System.out.println("Waiting for connection...");
-			//adding player 1
-			MyStreamSocket dataSocket1 = new MyStreamSocket(connectionSocket.accept());
-			String player1 = dataSocket1.receiveMessage();
-			dataSocket1.sendMessage("1");//Acknowledging player 1
-			System.out.println("Player 1 " + player1 + " has joined....Waiting for player 2");
-			//adding player 2
-			MyStreamSocket dataSocket2 = new MyStreamSocket(connectionSocket.accept());
-			String player2 = dataSocket2.receiveMessage();
-			dataSocket2.sendMessage(player1);//Acknowledging player 2
-			dataSocket1.sendMessage(player2);//player 1 is informed about player 2
-			System.out.println("Player 2 " + player2 +" has joined....Starting the game");
+			System.out.println("Server is ready. Waiting for connection...");
+			int count = 0;
+			while(true){			
+				//adding player 1
+				MyStreamSocket dataSocket1 = new MyStreamSocket(connectionSocket.accept());
+				//adding player 2
+				MyStreamSocket dataSocket2 = new MyStreamSocket(connectionSocket.accept());
+				Thread t = new Thread(new GameServerThread(dataSocket1, dataSocket2), String.valueOf(count++));
+				t.start();
+			}//while
+		}//try
+		catch(SocketException e){
+			System.out.println("Connection closed");
+		}
+		catch(Exception e){
+			System.out.println(e);
+		}
 
+	}
+}
+/* To make our Game server concurrent */
+class GameServerThread implements Runnable{
+	MyStreamSocket dataSocket1, dataSocket2;
+	String id;
+	GameServerThread(MyStreamSocket d1, MyStreamSocket d2){
+		dataSocket1 = d1;
+		dataSocket2 = d2;
+		
+	}
+	public void run(){
+		this.id = "Thread " + Thread.currentThread().getId();
+		try{
+			String player1 = dataSocket1.receiveMessage();
+			String player2 = dataSocket2.receiveMessage();
+			dataSocket1.sendMessage("1,"+player2);//Acknowledging player 1
+			dataSocket2.sendMessage("2,"+player1);//Acknowledging player 1
+			System.out.println(id + " ~ Player 1 " + player1 + " has joined....Waiting for player 2");
+			System.out.println(id + " ~ Player 2 " + player2 +" has joined....Starting the game");
 			//Dictionary
 			Dictionary dict = new Dictionary();
 			//toss
@@ -28,7 +53,7 @@ public class GameServer{
 			int rand_id = rand.nextInt(2) + 1;
 			char rand_ch = (char)(rand.nextInt(26) + 97);
 			String msg = rand_id + "," + rand_ch;
-			System.out.println(msg);
+			System.out.println(id + " ~ toss result, start letter " + msg);
 			dataSocket1.sendMessage(msg);
 			dataSocket2.sendMessage(msg);
 			if(rand_id == 2){
@@ -40,9 +65,12 @@ public class GameServer{
 			int counter = 0;
 			while(true){
 				msg = dataSocket1.receiveMessage();
-				String error_code;
-
-				if(msg.length() < 3)
+				System.out.println(id + " ~ " + msg);
+				if(msg.equals("q")){
+					dataSocket2.sendMessage(msg);
+					break;
+				}
+				else if(msg.length() < 3)
 					dataSocket1.sendMessage("S");
 				else if(dict.isCommon(msg))
 					dataSocket1.sendMessage("C");
@@ -54,7 +82,7 @@ public class GameServer{
 					dict.addToHistory(msg);
 					dataSocket1.turnCount++;
 					dataSocket1.score += msg.length();
-					/*if(dataSocket1.turnCount == 5 && dataSocket2.turnCount == 5){
+					if(dataSocket1.turnCount == 2 && dataSocket2.turnCount == 2){
 						MyStreamSocket win = null, lose = null;
 						if(dataSocket1.score > dataSocket2.score){
 							 win = dataSocket1;
@@ -64,10 +92,15 @@ public class GameServer{
 							win = dataSocket2;
 							lose = dataSocket1;
 						}
+						else{
+							dataSocket1.sendMessage("D," + String.valueOf(dataSocket1.score)+","+String.valueOf(dataSocket2.score));
+							dataSocket2.sendMessage("D," + String.valueOf(dataSocket2.score)+","+String.valueOf(dataSocket1.score));
+							break;
+						}
 						win.sendMessage("W," + String.valueOf(win.score)+","+String.valueOf(lose.score));
 						lose.sendMessage("L," + String.valueOf(lose.score)+","+String.valueOf(win.score));
-						System.exit(0);
-					}*/
+						break;
+					}
 					dataSocket2.sendMessage(msg + "," + String.valueOf(dataSocket2.score) + "," + String.valueOf(dataSocket1.score));
 					dataSocket1.sendMessage("T," + String.valueOf(dataSocket1.score) + "," + String.valueOf(dataSocket2.score));
 					//swap turn
@@ -75,46 +108,17 @@ public class GameServer{
 					dataSocket1 = dataSocket2;
 					dataSocket2 = temp;
 				}
-
-				/*if(accepted(dict, msg)){
-					dataSocket2.sendMessage(msg);
-					dataSocket1.sendMessage("T,0,0");
-					//swap turn
-					MyStreamSocket temp = dataSocket1;
-					dataSocket1 = dataSocket2;
-					dataSocket2 = temp;
-				}
-				else{
-					if(dict.isCommon(msg))
-						dataSocket1.sendMessage("C");
-					else if(dict.accessedBefore(msg))
-						dataSocket1.sendMessage("R");
-					else
-						dataSocket1.sendMessage("F");
-				}*/
 			}
-			//dataSocket1.close();
-			//dataSocket2.close();
+			dataSocket1.close();
+			dataSocket2.close();
 			//connectionSocket.close();
+		}//try
+		catch(SocketException e){
+			System.out.println("Connection closed");
 		}
 		catch(Exception e){
 			System.out.println(e);
 		}
 
-	}
-	//helping methods
-	private static boolean accepted(Dictionary dict,String word){
-		//if(word.length() < 3)
-		//	return false;
-		//1. present in dict 		//2. not accessed before
-		if(dict.contains(word) && !dict.accessedBefore(word) && !dict.isCommon(word)){
-			dict.addToHistory(word);
-			return true;
-		}		
-		return false;
-	}
-}
-/* To make our Game server concurrent */
-/*class GameServerThread implements Runnable{
-
-}*/
+	}//run
+}//GameServerThread
